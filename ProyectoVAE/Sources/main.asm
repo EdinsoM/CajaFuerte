@@ -18,23 +18,23 @@
 ;-------------------------------------------------
 ; variable/data section
 ;-------------------------------------------------
-;            ORG   RAMStart          ; Insert your data definition here
+;           ORG   	RAMStart		; Insert your data definition here
 ;ExampleVar: DS.B  1
-                ORG     Z_RAMStart+10	;Pagina Zero Dir = $90
+            ORG     Z_RAMStart+10	;Pagina Zero Dir = $90
 
-ClaveP:		DC.B    0,0,0,0	;Esta variable se encuentra guardada en la dir = $90
-Contador:	DC.B	0		;contador para verificar que la clave está bie
-Contador2:	DC.B	0		;contador para salir del desbloquear
+ClaveP:		DC.B    0,0,0,0			;Esta variable se encuentra guardada en la dir = $90
+Contador:	DC.B	0				;contador para verificar que la clave está bie
+Contador2:	DC.B	0				;contador para salir del desbloquear
 
-H0:  		DC.B 	1		;Determina si el botón 0 fue presionado
-H1:			DS.B	1		;Determina si el botón 1 fue presionado 
-H2:  		DC.B 	1		;Determina si el botón 2 fue presionado
-H3:  		DC.B 	1		;Determina si el botón 3 fue presionado
-VT:			DS.B 	1		;Variable temporal para almacenar la información proveniente del ADC
+H0:  		DC.B 	1				;Determina si el botón 0 fue presionado
+H1:			DS.B	1				;Determina si el botón 1 fue presionado 
+H2:  		DC.B 	1				;Determina si el botón 2 fue presionado
+H3:  		DC.B 	1				;Determina si el botón 3 fue presionado
+VT:			DS.B 	1				;Variable temporal para almacenar la información proveniente del ADC
 
-;VARIABLEtemp:  DS.B    1	;Esta variable se encuentra guardada en la dir = $82
-;CUENTA:        DS.B    1	;Esta variable se encuentra guardada en la dir = $83
-;HXtemp:	DS.B	2	; Esta variable se encuentra guardada en las dir = $84 - $85
+;VARIABLEtemp:  DS.B    1			;Esta variable se encuentra guardada en la dir = $82
+;CUENTA:        DS.B    1			;Esta variable se encuentra guardada en la dir = $83
+;HXtemp:		DS.B	2			;Esta variable se encuentra guardada en las dir = $84 - $85
 
 ;-------------------------------------------------
 ; code section
@@ -95,9 +95,9 @@ Desbloquear: BRCLR 7, ADCSC1, Desbloquear
 
 ; 		codigo para salir de aqui, salto a seguro
 
-		lda #$4					;Se carga el número 4 al acumulador
-		cbeq Contador2,	Probar	;Si Contador2 llega a 4, quiere decir que fueron presionados los 4 botones, por lo tanto, se hace un branch a la subrutina Probar,
-								;de tal manera que se procede a comprobar si la clave introducida es la correcta
+		lda #$4						;Se carga el número 4 al acumulador
+		cbeq Contador2,	Siguiente	;Si Contador2 llega a 4, quiere decir que fueron presionados los 4 botones, por lo tanto, se hace un branch a la subrutina Siguiente,
+									;de tal manera que se procede a comprobar si la clave introducida es la correcta
 
 ;		Si no se hace el branch, se regresa a la subrutina Desbloquear, a la espera de presionar otro botón
 
@@ -120,7 +120,7 @@ guardar2:
 		lda #$0						;Se carga 0 en el acumulador
 		cbeq H1, Desbloquear		;Se verifica el estado del botón 1, al inicio está habilitado (1), cuando se presiona se inhabilita (0)
 		mov #$0, H1					;Se inabilita el botón si está habilitado
-		mov VT, $81					;El valor del ADC,almacenado en VT, se almacena en el registro $81
+		mov VT, $81					;El valor del ADC, almacenado en VT, se almacena en el registro $81
 		lda $81						;Se carga el valor de $81 en el acumulador
 		inc Contador2				;Se aumenta en 1 el valor de Acumulador2
 		cbeq ClaveP + 1, Acumulador	;Se compara el valor con ClaveP (que está en la dirección $91) si coinciden, se hace un branch a la subrutina Acumulador
@@ -153,6 +153,14 @@ Acumulador:
 		inc Contador
 		bra Desbloquear
 
+Siguiente:
+		mov #$1, H0					;Se habilitan todos los botones
+		mov #$1, H1
+		mov #$1, H2
+		mov #$1, H3
+		mov #$0, Contador			;Se reestablecen los contadores
+		mov #$0, Contador2
+
 Probar:	
 
 		bset PTCD_PTCD0, PTCD		;Se apagan todos los leds del microcontrolador
@@ -181,7 +189,7 @@ Libre:
 		bclr PTED_PTED6, PTED
 		bclr PTED_PTED7, PTED
 		
-		BRCLR PTAD_PTAD2, PTAD, NuevaClave	;Se selecciona una nueva clave si se presiona el botón AD2
+		BRCLR PTAD_PTAD2, PTAD, adc2		;Se selecciona una nueva clave si se presiona el botón AD2, pero primero se activa el ADC, nuevamente
 		
 		BRSET PTAD_PTAD3, PTAD, NDesbloquear
 		JMP Desbloquear						;Se repite todo el proceso de nuevo haciendo JMP a desbloquear, sin cambiar de clave
@@ -189,8 +197,104 @@ Libre:
 NDesbloquear:
 		bra Libre							;No se puede hacer branch para una subrutina con una lejanía mayor a 255 espacios en memoria, por tal
 											;motivo se utiliza JMP Desbloquear
+											
+adc2: 
+		lda #$20
+		sta ADCSC1
 		
-NuevaClave:
+NuevaClave: BRCLR 7, ADCSC1, NuevaClave
+		
+		lda ADCRL
+		ldhx #$1B
+		div
+		coma
+		sta PTCD
+		sta PTED
+		coma
+
+		sta VT
+
+		bclr PTED_PTED6, PTED
+
+		BRCLR PTAD_PTAD2, PTAD, Nueva1
+		BRCLR PTAD_PTAD3, PTAD, Nueva2
+		BRCLR PTDD_PTDD2, PTDD, Nueva3
+		BRCLR PTDD_PTDD3, PTDD, Nueva4
+		
+; 		codigo para salir de aqui, salto a seguro
+
+		lda #$4						;Se carga el número 4 al acumulador
+		cbeq Contador2,	Comprobar	;Si Contador2 llega a 4, quiere decir que fueron presionados los 4 botones, por lo tanto, se hace un branch a la subrutina Comprobar,
+									;de tal manera que se procede a comprobar si la clave introducida es la deseada
+
+;		Si no se hace el branch, se regresa a la subrutina NuevaClave, a la espera de presionar otro botón
+
+		feed_watchdog
+		bra NuevaClave
+
+Nueva1:
+
+		lda #$0						;Se carga 0 en el acumulador
+		cbeq H0, NuevaClave			;Se verifica el estado del botón 0, al inicio está habilitado (1), cuando se presiona se inhabilita (0)
+		mov #$0, H0					;Se inabilita el botón si está habilitado
+		mov VT, ClaveP				;El valor del ADC,almacenado en VT, se almacena en el registro $90
+;		lda ClaveP					;Se carga el valor de $90 en el acumulador
+		inc Contador2				;Se aumenta en 1 el valor de Acumulador2
+;		cbeq ClaveP, Acumulador		;Se compara el valor con ClaveP (que está en la dirección $90) si coinciden, se hace un branch a la subrutina Acumulador
+		bra NuevaClave				;Si no coinciden los números, se regresa a la subrutina Desbloquear
+
+Nueva2:
+
+		lda #$0						;Se carga 0 en el acumulador
+		cbeq H1, NuevaClave			;Se verifica el estado del botón 1, al inicio está habilitado (1), cuando se presiona se inhabilita (0)
+		mov #$0, H1					;Se inabilita el botón si está habilitado
+		mov VT, ClaveP+1			;El valor del ADC, almacenado en VT, se almacena en el registro $91
+;		lda ClaveP + 1				;Se carga el valor de $91 en el acumulador
+		inc Contador2				;Se aumenta en 1 el valor de Acumulador2
+;		cbeq ClaveP + 1, Acumulador	;Se compara el valor con ClaveP (que está en la dirección $91) si coinciden, se hace un branch a la subrutina Acumulador
+		bra NuevaClave				;Si no coinciden los números, se regresa a la subrutina Desbloquear
+
+Nueva3:
+
+		lda #$0						;Se carga 0 en el acumulador
+		cbeq H2, NuevaClave			;Se verifica el estado del botón 1, al inicio está habilitado (1), cuando se presiona se inhabilita (0)
+		mov #$0, H2					;Se inabilita el botón si está habilitado
+		mov VT, ClaveP+2			;El valor del ADC,almacenado en VT, se almacena en el registro $92
+;		lda ClaveP + 2				;Se carga el valor de $92 en el acumulador
+		inc Contador2				;Se aumenta en 1 el valor de Acumulador2		
+;		cbeq ClaveP + 2, Acumulador	;Se compara el valor con ClaveP (que está en la dirección $92) si coinciden, se hace un branch a la subrutina Acumulador
+		bra NuevaClave				;Si no coinciden los números, se regresa a la subrutina Desbloquear
+
+Nueva4:
+
+		lda #$0						;Se carga 0 en el acumulador
+		cbeq H3, NuevaClave			;Se verifica el estado del botón 1, al inicio está habilitado (1), cuando se presiona se inhabilita (0)
+		mov #$0, H3					;Se inabilita el botón si está habilitado
+		mov VT, ClaveP+3			;El valor del ADC,almacenado en VT, se almacena en el registro $93
+;		lda ClaveP + 3				;Se carga el valor de $93 en el acumulador
+		inc Contador2				;Se aumenta en 1 el valor de Acumulador2		
+;		cbeq ClaveP + 3, Acumulador	;Se compara el valor con ClaveP (que está en la dirección $93) si coinciden, se hace un branch a la subrutina Acumulador
+		bra NuevaClave				;Si no coinciden los números, se regresa a la subrutina Desbloquear
+
+Comprobar:
+
+		bset PTCD_PTCD0, PTCD		;Se apagan todos los leds del microcontrolador, menos el 5
+		bset PTCD_PTCD1, PTCD
+		bset PTCD_PTCD2, PTCD
+		bset PTCD_PTCD3, PTCD
+		bset PTCD_PTCD4, PTCD
+		bclr PTCD_PTCD5, PTCD 
+		bset PTED_PTED6, PTED
+		bset PTED_PTED7, PTED
+		
+		BRCLR PTAD_PTAD3, PTAD, DeNuevo		;Se reestablece a la clave de fábrica y se coloca nuevamente la clave
+		
+		BRSET PTAD_PTAD2, PTAD, ClaveNueva
+		JMP Desbloquear						;Clave nueva establecida, se procede a hacer todo el proceso de desbloqueo, otra vez
+
+ClaveNueva:
+		bra Comprobar						;No se puede hacer branch para una subrutina con una lejanía mayor a 255 espacios en memoria, por tal
+											;motivo se utiliza JMP Desbloquear		
 		
 
 
