@@ -296,20 +296,8 @@ ClaveNueva:
 		bra Comprobar						;No se puede hacer branch para una subrutina con una lejanía mayor a 255 espacios en memoria, por tal
 											;motivo se utiliza JMP Desbloquear		
 		
-DeNuevo:
-		mov #$0,ClaveP						;Se reestablece a la clave de fábrica
-		mov #$0,ClaveP+1
-		mov #$0,ClaveP+2
-		mov #$0,ClaveP+3
-		
-		mov #$0,Contador2					;Se reestablece el contador2
-		
-		mov #$1, H0							;Se habilitan todos los botones
-		mov #$1, H1
-		mov #$1, H2
-		mov #$1, H3
 
-		JMP NuevaClave						;Se reinicia el proceso para colocar una nueva clave
+
 ;**************************************************************
 ; spurious - Spurious Interrupt Service Routine.
 ;             (unwanted interrupt)
