@@ -44,31 +44,23 @@ _Startup:
 
 		bset PTCDD_PTCDD0, PTCDD   ;Salidas 
 		bset PTCD_PTCD0, PTCD
-
 		bset PTCDD_PTCDD1, PTCDD 
 		bset PTCD_PTCD1, PTCD
-
 		bset PTCDD_PTCDD2, PTCDD
 		bset PTCD_PTCD2, PTCD
-
 		bset PTCDD_PTCDD3, PTCDD
 		bset PTCD_PTCD3, PTCD
-
 		bset PTCDD_PTCDD4, PTCDD
 		bset PTCD_PTCD4, PTCD
-
 		bset PTCDD_PTCDD5, PTCDD
 		bset PTCD_PTCD5, PTCD
-
 		bset PTEDD_PTEDD6, PTEDD
 		bset PTED_PTED6, PTED
-
 		bset PTEDD_PTEDD7, PTEDD
 		bset PTED_PTED7, PTED
-
+		
 		bclr PTADD_PTADD2, PTADD	;Entradas	
 		bclr PTADD_PTADD3, PTADD
-
 		bclr PTDDD_PTDDD2, PTDDD
 		bclr PTDDD_PTDDD3, PTDDD
 
@@ -101,11 +93,13 @@ Desbloquear: BRCLR 7, ADCSC1, Desbloquear
 		BRCLR PTDD_PTDD2, PTDD, guardar3
 		BRCLR PTDD_PTDD3, PTDD, guardar4
 
-; codigo para salir de aqui, salto a seguro
+; 		codigo para salir de aqui, salto a seguro
 
 		lda #$4					;Se carga el número 4 al acumulador
-		cbeq Contador2,	Seguro	;Si Contador2 llega a 4, quiere decir que fueron presionados los 4 botones, por lo tanto, se hace un branch a la subrutina Seguro,
+		cbeq Contador2,	Probar	;Si Contador2 llega a 4, quiere decir que fueron presionados los 4 botones, por lo tanto, se hace un branch a la subrutina Probar,
 								;de tal manera que se procede a comprobar si la clave introducida es la correcta
+
+;		Si no se hace el branch, se regresa a la subrutina Desbloquear, a la espera de presionar otro botón
 
 		feed_watchdog
 		bra Desbloquear
@@ -159,27 +153,45 @@ Acumulador:
 		inc Contador
 		bra Desbloquear
 
-Seguro:	
+Probar:	
 
-		bset PTCD_PTCD0, PTCD
+		bset PTCD_PTCD0, PTCD		;Se apagan todos los leds del microcontrolador
 		bset PTCD_PTCD1, PTCD
 		bset PTCD_PTCD2, PTCD
 		bset PTCD_PTCD3, PTCD
-
-		bclr PTCD_PTCD6, PTCD
+		bset PTCD_PTCD4, PTCD
+		bset PTCD_PTCD5, PTCD 
+		bset PTED_PTED6, PTED
 		bset PTED_PTED7, PTED
 
-		BRCLR PTAD_PTAD2, PTAD, Probar
+		lda #$4	
+		cbeq Contador, Libre		;Si coincide el valor de Contador con el número 4, quiere decir que los 4 valores introducidos fueron acertados
+									;por lo tanto, se desbloqueó el sistema y se hace branch a la función Libre
+		
+		JMP Desbloquear				;Si no se pudo desbloquear el sistema, se regresa a la subrutina Desbloquear
+
+Libre: 
+
+		bclr PTCD_PTCD0, PTCD				;Se encienden todos los leds del microcontrolador
+		bclr PTCD_PTCD1, PTCD
+		bclr PTCD_PTCD2, PTCD
+		bclr PTCD_PTCD3, PTCD
+		bclr PTCD_PTCD4, PTCD
+		bclr PTCD_PTCD5, PTCD 
+		bclr PTED_PTED6, PTED
+		bclr PTED_PTED7, PTED
+		
+		BRCLR PTAD_PTAD2, PTAD, NuevaClave	;Se selecciona una nueva clave si se presiona el botón AD2
+		
 		BRSET PTAD_PTAD3, PTAD, NDesbloquear
-		JMP Desbloquear
+		JMP Desbloquear						;Se repite todo el proceso de nuevo haciendo JMP a desbloquear, sin cambiar de clave
 
 NDesbloquear:
-
-		feed_watchdog
-		bra Seguro
-
-Probar:
-
+		bra Libre							;No se puede hacer branch para una subrutina con una lejanía mayor a 255 espacios en memoria, por tal
+											;motivo se utiliza JMP Desbloquear
+		
+NuevaClave:
+		
 
 
 ;**************************************************************
