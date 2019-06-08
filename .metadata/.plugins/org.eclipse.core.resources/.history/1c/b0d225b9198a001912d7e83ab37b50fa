@@ -30,7 +30,6 @@ H0:  		DC.B 	1				;Determina si el botón 0 fue presionado
 H1:			DS.B	1				;Determina si el botón 1 fue presionado 
 H2:  		DC.B 	1				;Determina si el botón 2 fue presionado
 H3:  		DC.B 	1				;Determina si el botón 3 fue presionado
-
 VT:			DS.B 	1				;Variable temporal para almacenar la información proveniente del ADC
 
 ;VARIABLEtemp:  DS.B    1			;Esta variable se encuentra guardada en la dir = $82
@@ -43,7 +42,7 @@ VT:			DS.B 	1				;Variable temporal para almacenar la información proveniente de
             ORG   ROMStart
 _Startup:
 
-		bset PTCDD_PTCDD0, PTCDD   ;Salidas (LED's) 
+		bset PTCDD_PTCDD0, PTCDD   ;Salidas 
 		bset PTCD_PTCD0, PTCD
 		bset PTCDD_PTCDD1, PTCDD 
 		bset PTCD_PTCD1, PTCD
@@ -59,8 +58,6 @@ _Startup:
 		bset PTED_PTED6, PTED
 		bset PTEDD_PTEDD7, PTEDD
 		bset PTED_PTED7, PTED
-		
-		bset PTBDD_PTBDD5, PTBDD	;Salida (Buzzer)
 		
 		bclr PTADD_PTADD2, PTADD	;Entradas	
 		bclr PTADD_PTADD3, PTADD
