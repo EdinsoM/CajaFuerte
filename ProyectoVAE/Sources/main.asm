@@ -19,7 +19,6 @@
 ; variable/data section
 ;-------------------------------------------------
 ;           ORG   	RAMStart		; Insert your data definition here
-;ExampleVar:DS.B  	1
             ORG     Z_RAMStart+10	;Pagina Zero Dir = $90
 
 ClaveP:		DC.B    0,0,0,0			;Esta variable se encuentra guardada en la dir = $90
@@ -33,14 +32,304 @@ H3:  		DC.B 	1				;Determina si el botón 3 fue presionado
 
 VT:			DS.B 	1				;Variable temporal para almacenar la información proveniente del ADC
 
-;VARIABLEtemp:  DS.B    1			;Esta variable se encuentra guardada en la dir = $82
-;CUENTA:        DS.B    1			;Esta variable se encuentra guardada en la dir = $83
-;HXtemp:		DS.B	2			;Esta variable se encuentra guardada en las dir = $84 - $85
+;##############################################################################################
+Do4: MACRO
+			LDHX #$003B
+			STHX TPM1MOD ;Do4=261.6 Hz
+			ENDM
+DoS4: MACRO
+			LDHX #$0038
+			STHX TPM1MOD ;Do#4=277.1 Hz
+			ENDM
+Re4: MACRO
+			LDHX #$0035
+			STHX TPM1MOD ;Re4=293.6 Hz
+			ENDM
+ReS4: MACRO
+			LDHX #$0032
+			STHX TPM1MOD ;Re#4=311.1 Hz
+			ENDM
+Mi4: MACRO
+			LDHX #$002F
+			STHX TPM1MOD ;Mi4=329.6 Hz
+			ENDM
+Fa4: MACRO
+			LDHX #$002C
+			STHX TPM1MOD ;Fa4=349.2 Hz
+			ENDM
+FaS4: MACRO
+			LDHX #$002A
+			STHX TPM1MOD ;Fa#4=370 Hz
+			ENDM
+Sol4: MACRO
+			LDHX #$0027
+			STHX TPM1MOD ;Sol4=392 Hz
+			ENDM
+SolS4: MACRO
+			LDHX #$0025
+			STHX TPM1MOD ;Sol#4=415.3 Hz
+			ENDM
+La4: MACRO
+			LDHX #$0023
+			STHX TPM1MOD ;La4=440 Hz
+			ENDM
+LaS4: MACRO
+			LDHX #$0021
+			STHX TPM1MOD ;La4=466.1 Hz
+			ENDM
+Si4: MACRO
+			LDHX #$001F
+			STHX TPM1MOD ;Si4=493 Hz
+			ENDM
+Do5: MACRO
+			LDHX #$001D
+			STHX TPM1MOD ;Do5=523.2 Hz
+			ENDM
+DoS5: MACRO
+			LDHX #$001C
+			STHX TPM1MOD ;Do#5=554.3 Hz
+			ENDM
+Re5: MACRO
+			LDHX #$001A
+			STHX TPM1MOD ;Re5=587.3 Hz
+			ENDM
+ReS5: MACRO
+			LDHX #$0019
+			STHX TPM1MOD ;Re#5=622.2 Hz
+			ENDM
+Mi5: MACRO
+			LDHX #$0017
+			STHX TPM1MOD ;Mi5=659.3 Hz
+			ENDM
+Fa5: MACRO
+			LDHX #$0016
+			STHX TPM1MOD ;Fa5=698.5 Hz
+			ENDM
+FaS5: MACRO
+			LDHX #$0015
+			STHX TPM1MOD ;Fa#5=740 Hz
+			ENDM
+Sol5: MACRO
+			LDHX #$0013
+			STHX TPM1MOD ;Sol5=784 Hz
+			ENDM
+SolS5: MACRO
+			LDHX #$0012
+			STHX TPM1MOD ;Sol#5=830.6 Hz
+			ENDM
+La5: MACRO
+			LDHX #$0011
+			STHX TPM1MOD ;La5=880 Hz
+			ENDM
+LaS5: MACRO
+			LDHX #$0010
+			STHX TPM1MOD ;La#5=932.5 Hz
+			ENDM
+Si5: MACRO
+			LDHX #$000F
+			STHX TPM1MOD ;Si5=988 Hz
+			ENDM
+Do6: MACRO
+			LDHX #$000E
+			STHX TPM1MOD ;Do6=1046 Hz
+			ENDM
+DoS6: MACRO
+			LDHX #$000E
+			STHX TPM1MOD ;Do#6=1108.7 Hz
+			ENDM
+Re6: MACRO
+			LDHX #$000D
+			STHX TPM1MOD ;Re6=1174.6 Hz
+			ENDM
+ReS6: MACRO
+			LDHX #$000C
+			STHX TPM1MOD ;Re#6=1244.5 Hz
+			ENDM
+Mi6: MACRO
+			LDHX #$000B
+			STHX TPM1MOD ;Mi=1318.3 Hz
+			ENDM
+Fa6: MACRO
+			LDHX #$000B
+			STHX TPM1MOD ;Fa6=1396.9 Hz
+			ENDM
+FaS6: MACRO
+			LDHX #$000A
+			STHX TPM1MOD ;Fa#6= Hz
+			ENDM
+Sol6: MACRO
+			LDHX #$0009
+			STHX TPM1MOD ;Sol6= Hz
+			ENDM
+SolS6: MACRO
+			LDHX #$0009
+			STHX TPM1MOD ;Sol#6= Hz
+			ENDM
+La6: MACRO
+			LDHX #$0008
+			STHX TPM1MOD ;La6= Hz
+			ENDM
+LaS6: MACRO
+			LDHX #$0008
+			STHX TPM1MOD ;La#6= Hz
+			ENDM
+Si6: MACRO
+			LDHX #$0007
+			STHX TPM1MOD ;Si6= Hz
+			ENDM
+;##############################################################################################
+;Definicion de Variable utilizada:
+Permiso: 	DS.B 1 ;permiso para avanzar a la siguiente nota
+;Inicializacion de variable:
+ 			ORG 	ROMStart
+			LDA #$00
+ 			STA Permiso
+;-----------------------------------------------------------------------------
+;Rutina de interrupcion de TPM2
+TPM2Interrupt:
+ 			LDA TPM2SC
+ 			AND #%01111111
+ 			STA TPM2SC ;Limpia la bandera
 
+ 			MOV #$00,Permiso ;Activa el permiso
+
+ 			BCLR PTBD_PTBD5,PTBD ;Desactiva el buzzer
+
+ 			RTI
 ;-------------------------------------------------
 ; code section
 ;-------------------------------------------------
-            ORG   ROMStart
+;##############################################################################################
+;            ORG   ROMStart
+;##############################################################################################
+Redonda: MACRO
+			MOV #$FF, Permiso ;PERMISO DENEGADO
+			LDHX #$F424
+			STHX TPM2MOD ;
+\@Loop:
+			BRSET 1,Permiso,\@Loop ;Pregunta si se tiene permiso de avanzar
+			ENDM
+Blanca: MACRO
+			MOV #$FF, Permiso ;PERMISO DENEGADO
+			LDHX #$7A12
+			STHX TPM2MOD ;
+\@Loop:
+			BRSET 1,Permiso,\@Loop ;Pregunta si se tiene permiso de avanzar
+			ENDM
+Negra: 		MACRO
+			MOV #$FF, Permiso ;PERMISO DENEGADO
+			LDHX #$3D09
+			STHX TPM2MOD ;
+\@Loop:
+			BRSET 1,Permiso,\@Loop ;Pregunta si se tiene permiso de avanzar
+			ENDM
+Corchea: 	MACRO
+			MOV #$FF, Permiso ;PERMISO DENEGADO
+			LDHX #$1E84
+			STHX TPM2MOD ;
+\@Loop:
+			BRSET 1,Permiso,\@Loop ;Pregunta si se tiene permiso de avanzar
+			ENDM
+Semi_Corchea: MACRO
+			MOV #$FF, Permiso ;PERMISO DENEGADO
+			LDHX #$0F42
+			STHX TPM2MOD ;
+\@Loop:
+			BRSET 1,Permiso,\@Loop ;Pregunta si se tiene permiso de avanzar
+			ENDM
+Fusa: MACRO
+			MOV #$FF, Permiso ;PERMISO DENEGADO
+			LDHX #$07A1
+			STHX TPM2MOD ;
+\@Loop:
+			BRSET 1,Permiso,\@Loop ;Pregunta si se tiene permiso de avanzar
+			ENDM
+Semi_Fusa: 	MACRO
+			MOV #$FF, Permiso ;PERMISO DENEGADO
+			LDHX #$03D0
+			STHX TPM2MOD ;
+\@Loop:
+			BRSET 1,Permiso,\@Loop ;Pregunta si se tiene permiso de avanzar
+			ENDM
+SS_Fusa: 	MACRO
+			MOV #$FF, Permiso ;PERMISO DENEGADO
+			LDHX #$01E8
+			STHX TPM2MOD ;
+\@Loop:
+			BRSET 1,Permiso,\@Loop ;Pregunta si se tiene permiso de avanzar
+			ENDM
+SSS_Fusa: 	MACRO
+			MOV #$FF, Permiso ;PERMISO DENEGADO
+			LDHX #$000F
+			STHX TPM2MOD ;
+\@Loop:
+			BRSET 1,Permiso,\@Loop ;Pregunta si se tiene permiso de avanzar
+			ENDM
+;---------------------------------------------------------------------------
+; Silencio (apaga el Buzzer)
+Silencio: MACRO
+			LDHX #$3D09 ; 1 Hz
+			STHX TPM1MOD
+			ENDM
+;----------------------------------------------------------------------------
+; Activar o Desactivar TPM1
+TMP1_ON: MACRO
+			LDA #%01001111
+			STA TPM1SC ;Activa el TPM1
+			ENDM
+TMP1_OFF: MACRO
+			LDA #$00
+			STA TPM1SC
+			ENDM
+;----------------------------------------------------------------------------
+TETRIS:
+ 			Silencio
+ 			Negra
+			La5
+ 			Corchea
+ 			FaS5
+ 			Semi_Corchea
+ 			Sol5
+ 			Semi_Corchea
+ 			SolS5
+ 			Corchea
+ 			Sol5
+ 			Semi_Corchea
+ 			FaS5 
+			Semi_Corchea
+			Mi5
+ 			Corchea
+ 			Mi5
+ 			Semi_Corchea
+ 			Sol5
+ 			Semi_Corchea
+ 			La5
+ 			Corchea; 
+			SolS5
+ 			Semi_Corchea
+ 			Sol5 
+ 			Semi_Corchea 
+ 			FaS5 
+ 			Corchea 
+ 			FaS5 
+ 			Semi_Corchea 
+ 			Sol5 
+ 			Semi_Corchea 
+ 			SolS5 
+ 			Corchea 
+ 			La5 
+ 			Corchea 
+ 			Sol5 
+ 			Corchea 
+ 			Mi5 
+ 			Corchea 
+	 		Mi5 
+	 		Negra 
+	 		Silencio 
+	 		Blanca 
+	 		JMP Libre
+
+;##############################################################################################
 _Startup:
 
 		bset PTCDD_PTCDD0, PTCDD   ;Salidas (LED's) 
@@ -177,13 +466,17 @@ Probar:
 		bset PTED_PTED7, PTED
 
 		lda #$4	
-		cbeq Contador, Libre		;Si coincide el valor de Contador con el número 4, quiere decir que los 4 valores introducidos fueron acertados
+		cbeq Contador, Musiquita		;Si coincide el valor de Contador con el número 4, quiere decir que los 4 valores introducidos fueron acertados
 									;por lo tanto, se desbloqueó el sistema y se hace branch a la función Libre
 		
 		JMP Desbloquear				;Si no se pudo desbloquear el sistema, se regresa a la subrutina Desbloquear
 
+Musiquita:
+		JMP TETRIS
+
 Libre: 
 
+		
 		bclr PTCD_PTCD0, PTCD				;Se encienden todos los leds de la tarjeta
 		bclr PTCD_PTCD1, PTCD
 		bclr PTCD_PTCD2, PTCD
