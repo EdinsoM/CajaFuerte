@@ -224,8 +224,7 @@ NDesbloquear:
 adc2: 
 		lda #$20
 		sta ADCSC1
-
-delay2:		
+		
 		lda #$0
 		sta RTCMOD
 		lda #%00001111
