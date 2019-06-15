@@ -194,23 +194,6 @@ Probar:
 		lda #$4	
 		cbeq Contador, Libre		;Si coincide el valor de Contador con el número 4, quiere decir que los 4 valores introducidos fueron acertados
 									;por lo tanto, se desbloqueó el sistema y se hace branch a la función Libre
-									
-		bclr PTCD_PTCD0, PTCD		;Encender el primer LED de la tarjeta indica que la clave es incorrecta
-									
-
-delay2:		
-		lda #$0
-		sta RTCMOD
-		lda #%00001111
-		ora #%10000000
-		sta RTCSC
-		
-loop2:
-		lda RTCSC
-		feed_watchdog
-		CBEQA #%00001111, loop2
-									
-		bset PTCD_PTCD0, PTCD
 		mov #$0, Contador 
 		JMP Desbloquear				;Si no se pudo desbloquear el sistema, se regresa a la subrutina Desbloquear
 
@@ -242,17 +225,17 @@ adc2:
 		lda #$20
 		sta ADCSC1
 
-delay3:		
+delay2:		
 		lda #$0
 		sta RTCMOD
 		lda #%00001111
 		ora #%10000000
 		sta RTCSC
 		
-loop3:
+loop2:
 		lda RTCSC
 		feed_watchdog
-		CBEQA #%00001111, loop3
+		CBEQA #%00001111, loop2
 		 			
 NuevaClave: BRCLR 7, ADCSC1, NuevaClave
 		
